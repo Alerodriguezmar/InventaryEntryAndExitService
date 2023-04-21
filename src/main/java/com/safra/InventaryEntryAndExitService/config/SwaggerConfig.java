@@ -12,7 +12,7 @@ public class SwaggerConfig {
     public OpenAPI orchestratorServiceOpenAPI() {
         return new OpenAPI()
                 .info(new Info().title("InventoryEntryAndExit Service API")
-                        .description("Endpoints and Models for Assembling Service Application")
+                        .description("Endpoints and Models for InventoryEntryAndExit Service Application")
                         .version("v0.0.1")
                         .license(new License().name("Apache 2.0").url("http://springdoc.org")));
     }
