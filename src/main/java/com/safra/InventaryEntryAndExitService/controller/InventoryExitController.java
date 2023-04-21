@@ -55,6 +55,19 @@ public class InventoryExitController {
 		return null;
 	}
 
+	@PostMapping("test")
+	public List<OIBT> test(HttpServletRequest request) {
+		HttpSession session = request.getSession();
+		new CertificateSSLConfig().trustSelfSignedSSL();
+		try {
+			return inventoryExitService.ExitRollsStockMin((HttpHeaders) session.getAttribute("cookies"));
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+		return null;
+	}
+
+
 
 
 }
