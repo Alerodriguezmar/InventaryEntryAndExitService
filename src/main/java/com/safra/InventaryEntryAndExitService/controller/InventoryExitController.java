@@ -22,7 +22,7 @@ import java.util.List;
 public class InventoryExitController {
 
 	@Autowired
-	private InventoryExitService inventoryExitService;
+	private InventoryExitService  inventoryExitService;
 
 	@Autowired
 	private LoginService loginService;
