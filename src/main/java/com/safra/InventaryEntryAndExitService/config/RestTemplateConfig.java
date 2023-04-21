@@ -11,6 +11,7 @@ import java.security.NoSuchAlgorithmException;
 @Configuration
 public class RestTemplateConfig {
 
+
     @Bean
     public RestTemplate restTemplate() throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException {
         return new RestTemplate();
