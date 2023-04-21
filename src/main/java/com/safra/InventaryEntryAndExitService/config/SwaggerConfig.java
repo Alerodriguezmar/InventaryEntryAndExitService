@@ -11,7 +11,7 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI orchestratorServiceOpenAPI() {
         return new OpenAPI()
-                .info(new Info().title("Assembling Service API")
+                .info(new Info().title("Inventart Entry and Exit Service API")
                         .description("Endpoints and Models for Assembling Service Application")
                         .version("v0.0.1")
                         .license(new License().name("Apache 2.0").url("http://springdoc.org")));
