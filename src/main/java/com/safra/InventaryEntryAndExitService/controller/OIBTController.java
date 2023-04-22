@@ -40,10 +40,4 @@ public class OIBTController {
         return ResponseEntity.status(HttpStatus.OK).body(oibtService.findAllByWhsCode(whsCode).size());
     }
 
-    @Operation(summary = "Assing a transient location for a material in process", parameters = {
-            @Parameter(name = "whsCode", description = "This parameter correspons to a name of machine associated to a location", required = false)})
-    @GetMapping("/test")
-    public ResponseEntity<Integer> terst(@RequestParam(name = "whsCode" , defaultValue = "10004") String whsCode){
-        return ResponseEntity.status(HttpStatus.OK).body(oibtService.findAllByWhsCode(whsCode).size());
-    }
 }
