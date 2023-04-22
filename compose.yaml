@@ -1,0 +1,13 @@
+services:
+   orchestrator-service:
+      image: "inventaryentryandexitservice"
+      ports:
+         - "22100:22100"      
+      container_name: inventaryentryandexitservice
+      networks:
+         - safra-docker-network
+      hostname: inventaryentryandexitservice      
+      stdin_open: true
+      tty: true
+networks:
+   safra-docker-network: {}
