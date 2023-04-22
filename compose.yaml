@@ -1,5 +1,5 @@
 services:
-   orchestrator-service:
+   inventaryentryandexitservice:
       image: "inventaryentryandexitservice"
       ports:
          - "22100:22100"      
