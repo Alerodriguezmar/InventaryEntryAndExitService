@@ -7,4 +7,5 @@ services:
       hostname: inventaryentryandexitservice      
       stdin_open: true
       tty: true
-      network_mode: "host"
+
+
