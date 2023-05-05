@@ -7,6 +7,8 @@ services:
       hostname: inventaryentryandexitservice
       stdin_open: true
       tty: true
+      extra_hosts:
+         - "host.docker.internal:host-gateway"
     ##  network_mode: "host"
 
    stocktransferservice:
@@ -17,6 +19,8 @@ services:
       hostname: stocktransferservice
       stdin_open: true
       tty: true
+      extra_hosts:
+         - "host.docker.internal:host-gateway"
       ##  network_mode: "host"
    defectrecord:
       image: "defectrecord"
@@ -26,6 +30,8 @@ services:
       hostname: defectrecord
       stdin_open: true
       tty: true
+      extra_hosts:
+         - "host.docker.internal:host-gateway"
       ##  network_mode: "host"
 
 
