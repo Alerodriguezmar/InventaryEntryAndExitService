@@ -39,6 +39,9 @@ public class DocumentLineEntry {
     @JsonProperty("CostingCode3")
     private String costingCode3;
 
+    @JsonProperty("Comments")
+    private String Comments;
+
     @JsonProperty("BatchNumbers")
     private List<BatchNumber> batchNumbers;
 }

@@ -1,15 +1,13 @@
 package com.safra.InventaryEntryAndExitService.services.impl;
 
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.safra.InventaryEntryAndExitService.entities.*;
 import com.safra.InventaryEntryAndExitService.repositories.InventoryExitAndEntryRepository;
-import com.safra.InventaryEntryAndExitService.services.InventoryExitService;
+import com.safra.InventaryEntryAndExitService.services.InventoryEntryService;
 import com.safra.InventaryEntryAndExitService.services.LoginService;
 import com.safra.InventaryEntryAndExitService.services.OIBTService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
@@ -18,17 +16,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import static java.util.stream.Collectors.groupingBy;
-
 @Service
-public class InventoryExitServiceImpl implements InventoryExitService {
+public class InventoryEntryServiceImpl implements InventoryEntryService {
 
     private int requestAttemps;
 
@@ -53,8 +48,7 @@ public class InventoryExitServiceImpl implements InventoryExitService {
     private InventoryExitAndEntryRepository inventoryExitAndEntryRepository;
 
     @Override
-    public String ExitRoll(HttpHeaders cookies, DocumentExit documentExits) {
-
+    public String EntryRoll(HttpHeaders cookies, DocumentEntry documentEntry) {
         requestAttemps++;
         try {
 
@@ -64,13 +58,13 @@ public class InventoryExitServiceImpl implements InventoryExitService {
             ResponseEntity<String> response = null;
             try {
 
-                url = new URI("https://192.168.100.193:50000/b1s/v1/InventoryGenExits");
+                url = new URI("https://192.168.100.193:50000/b1s/v1/InventoryGenEntries");
 
 
             } catch (URISyntaxException ex) {
                 System.out.println("error");
             }
-            RequestEntity<DocumentExit> request = new RequestEntity<>(documentExits, loginService.getAuthorizationHeader(),
+            RequestEntity<DocumentEntry> request = new RequestEntity<>(documentEntry, loginService.getAuthorizationHeader(),
                     HttpMethod.POST, url);
             try {
                 response = restTemplate.exchange(request, String.class);
@@ -80,11 +74,12 @@ public class InventoryExitServiceImpl implements InventoryExitService {
             // retry when unauthorized
             if (response != null && response.getStatusCode().equals(HttpStatus.UNAUTHORIZED)) {
                 // refresh authorization cookies
-                request = new RequestEntity<>(documentExits, loginService.getAuthorizationHeader(), HttpMethod.POST, url);
+                request = new RequestEntity<>(documentEntry, loginService.getAuthorizationHeader(), HttpMethod.POST, url);
                 response = restTemplate.exchange(request, String.class);
             }
 
             return response.toString();
+
         } catch (Exception e) {
             e.printStackTrace();
             if (requestAttemps <= MAX_ATTEMPS) {
@@ -98,29 +93,26 @@ public class InventoryExitServiceImpl implements InventoryExitService {
     }
 
     @Override
-    public List<OIBT> ExitRollsStockMin(HttpHeaders cookies) {
+    public List<OIBT> EntryRollsStockMin(HttpHeaders cookies) throws JsonProcessingException {
 
-        DocumentExit documentExit = new DocumentExit();
+        DocumentEntry documentEntry = new DocumentEntry();
 
         List<OIBT> oibts = oibtService.findAllByWhsCode("10013-2").subList(0,2);
 
-        documentExit.setDocumentLines(this.DocumentLinesExitByOIBT(oibts));
+        documentEntry.setDocumentLines(this.DocumentLinesEntryByOIBT(oibts,"comments"));
 
         try {
 
             URI url = null;
 
-
             ResponseEntity<String> response = null;
             try {
-                url = new URI("https://192.168.100.193:50000/b1s/v1/InventoryGenExits");
-
-
+                url = new URI("https://192.168.100.193:50000/b1s/v1/InventoryGenEntries");
 
             } catch (URISyntaxException ex) {
-               ex.printStackTrace();
+                ex.printStackTrace();
             }
-            RequestEntity<DocumentExit> request = new RequestEntity<>(documentExit, loginService.getAuthorizationHeader(),
+            RequestEntity<DocumentEntry> request = new RequestEntity<>(documentEntry, loginService.getAuthorizationHeader(),
                     HttpMethod.POST, url);
             try {
                 response = restTemplate.exchange(request, String.class);
@@ -130,11 +122,11 @@ public class InventoryExitServiceImpl implements InventoryExitService {
             // retry when unauthorized
             if (response != null && response.getStatusCode().equals(HttpStatus.UNAUTHORIZED)) {
                 // refresh authorization cookies
-                request = new RequestEntity<>(documentExit, loginService.getAuthorizationHeader(), HttpMethod.POST, url);
+                request = new RequestEntity<>(documentEntry, loginService.getAuthorizationHeader(), HttpMethod.POST, url);
                 response = restTemplate.exchange(request, String.class);
             }
 
-            System.out.println("Salida"+response);
+            System.out.println("Entrada"+response);
 
             return oibts;
         } catch (Exception e) {
@@ -151,39 +143,36 @@ public class InventoryExitServiceImpl implements InventoryExitService {
     }
 
     @Override
-    public String ExitRollsStockMinBy(HttpHeaders cookies, List<OIBT> oibts) throws JsonProcessingException {
+    public List<OIBT> EntryRollsStockMinBy(HttpHeaders cookies, List<OIBT> oibts,String comment) throws JsonProcessingException {
+        DocumentEntry documentEntry = new DocumentEntry();
 
-        //Documento donde se adjuntan todas las salidas
-        DocumentExit documentExit = new DocumentExit();
+        documentEntry.setDocumentLines(this.DocumentLinesEntryByOIBT(oibts,comment));
 
-        //Creacion de la cabecera de el documento y los batchNums
-        documentExit.setDocumentLines(this.DocumentLinesExitByOIBT(oibts));
+
+        System.out.println(documentEntry.toString());
 
         try {
 
-            //Inicia
             URI url = null;
 
             ResponseEntity<String> response = null;
             try {
-                url = new URI("https://192.168.100.193:50000/b1s/v1/InventoryGenExits");
+                url = new URI("https://192.168.100.193:50000/b1s/v1/InventoryGenEntries");
 
             } catch (URISyntaxException ex) {
-               ex.printStackTrace();
+                ex.printStackTrace();
             }
-            RequestEntity<DocumentExit> request = new RequestEntity<>(documentExit, loginService.getAuthorizationHeader(),
+            RequestEntity<DocumentEntry> request = new RequestEntity<>(documentEntry, loginService.getAuthorizationHeader(),
                     HttpMethod.POST, url);
-
             try {
                 response = restTemplate.exchange(request, String.class);
             } catch (RestClientException e) {
-                e.printStackTrace();
+                    e.printStackTrace();
             }
             // retry when unauthorized
             if (response != null && response.getStatusCode().equals(HttpStatus.UNAUTHORIZED)) {
                 // refresh authorization cookies
-                request = new RequestEntity<>(documentExit, loginService.getAuthorizationHeader(), HttpMethod.POST, url);
-
+                request = new RequestEntity<>(documentEntry, loginService.getAuthorizationHeader(), HttpMethod.POST, url);
                 response = restTemplate.exchange(request, String.class);
             }
 
@@ -191,9 +180,9 @@ public class InventoryExitServiceImpl implements InventoryExitService {
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
 
 
-            inventoryExitAndEntryRepository.save(new InventoryExitAndEntry(jsonNode.get("DocNum").asText(),jsonNode.get("DocEntry").asText(),oibts,TypeOperation.EXIT));
+            inventoryExitAndEntryRepository.save(new InventoryExitAndEntry(jsonNode.get("DocNum").asText(),jsonNode.get("DocEntry").asText(),oibts,TypeOperation.ENTRY));
 
-            return jsonNode.get("DocNum").asText();
+            return oibts;
         } catch (Exception e) {
             e.printStackTrace();
             if (requestAttemps <= MAX_ATTEMPS) {
@@ -207,9 +196,9 @@ public class InventoryExitServiceImpl implements InventoryExitService {
         throw new RestClientException("It was not posible connect to " + "https://192.168.100.193:50000/b1s/v1/InventoryGenExits");
     }
 
-    public List<DocumentLineExit> DocumentLinesExitByOIBT(List<OIBT> oibts){
+    public List<DocumentLineEntry> DocumentLinesEntryByOIBT(List<OIBT> oibts,String comment){
 
-        List<DocumentLineExit> stockTransferLines = new ArrayList<>();
+        List<DocumentLineEntry> stockTransferLines = new ArrayList<>();
 
         var mapItemCode = oibts.stream().collect(groupingBy(OIBT::getItemCode));
 
@@ -222,24 +211,28 @@ public class InventoryExitServiceImpl implements InventoryExitService {
 
             var sumResult = String.format("%.3f%n", sum);
 
-            DocumentLineExit documentLineExit = new DocumentLineExit();
-            documentLineExit.setWarehouseCode("10013-2");
-            documentLineExit.setQuantity(Double.valueOf(sumResult));
-            documentLineExit.setItemCode(s);
-            documentLineExit.setAccountCode("61230503");
-            documentLineExit.setCostingCode("4010");
-            documentLineExit.setUEstConcSalinv("49");//47 pruebas
-            documentLineExit.setCostingCode2("NoAplica");
-            documentLineExit.setCostingCode3("N/A");
+            DocumentLineEntry documentLineEntry = new DocumentLineEntry();
+            documentLineEntry.setWarehouseCode("10018");
+            documentLineEntry.setQuantity(Double.valueOf(sumResult));
+            documentLineEntry.setItemCode(s);
+            documentLineEntry.setAccountCode("14350501");
+            documentLineEntry.setCostingCode("4010");
+            documentLineEntry.setUEstConcEntinv("20");
+            documentLineEntry.setCostingCode2("NoAplica");
+            documentLineEntry.setCostingCode3("N/A");
+            documentLineEntry.setUnitPrice(String.valueOf(1/Double.valueOf(sumResult)));
+            documentLineEntry.setComments(comment);
 
             List<BatchNumber> batchNumbers = new ArrayList<>();
             for(OIBT oibt: oibts1){
                 batchNumbers.add(new BatchNumber(oibt.getBatchNum(),oibt.getQuantity()));
             };
-            documentLineExit.setBatchNumbers(batchNumbers);
-            stockTransferLines.add(documentLineExit);
+            documentLineEntry.setBatchNumbers(batchNumbers);
+            stockTransferLines.add(documentLineEntry);
         });
 
         return  stockTransferLines;
     }
+
+
 }

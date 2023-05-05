@@ -12,5 +12,5 @@ import java.util.List;
 @NoArgsConstructor
 public class DocumentEntry {
     @JsonProperty("DocumentLines")
-    private List<DocumentLineEntry> documentLineEntries;
+    private List<DocumentLineEntry> documentLines;
 }

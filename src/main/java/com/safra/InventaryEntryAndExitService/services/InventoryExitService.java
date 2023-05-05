@@ -16,4 +16,6 @@ public interface InventoryExitService {
 
     List<OIBT> ExitRollsStockMin(HttpHeaders cookies) throws JsonProcessingException;
 
+    String ExitRollsStockMinBy(HttpHeaders cookies,List<OIBT> oibts) throws JsonProcessingException;
+
 }
