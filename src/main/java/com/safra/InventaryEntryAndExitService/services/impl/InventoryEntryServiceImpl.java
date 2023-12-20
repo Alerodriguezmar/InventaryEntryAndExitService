@@ -194,6 +194,64 @@ public class InventoryEntryServiceImpl implements InventoryEntryService {
             requestAttemps = 0;
         }
         throw new RestClientException("It was not posible connect to " + "https://192.168.100.193:50000/b1s/v1/InventoryGenExits");
+
+    }
+
+    @Override
+    public List<OIBT> EntryRollsStockMinByToldos(HttpHeaders cookies, List<OIBT> oibts, String comment) throws JsonProcessingException {
+        DocumentEntry documentEntry = new DocumentEntry();
+
+        documentEntry.setDocumentLines(this.DocumentLinesEntryByOIBTToldos(oibts,comment));
+
+
+        System.out.println(documentEntry.toString());
+
+        try {
+
+            URI url = null;
+
+            ResponseEntity<String> response = null;
+            try {
+                url = new URI("https://192.168.100.193:50000/b1s/v1/InventoryGenEntries");
+
+            } catch (URISyntaxException ex) {
+                ex.printStackTrace();
+            }
+            RequestEntity<DocumentEntry> request = new RequestEntity<>(documentEntry, loginService.getAuthorizationHeader(),
+                    HttpMethod.POST, url);
+            try {
+               response = restTemplate.exchange(request, String.class);
+            } catch (RestClientException e) {
+                e.printStackTrace();
+            }
+            // retry when unauthorized
+            if (response != null && response.getStatusCode().equals(HttpStatus.UNAUTHORIZED)) {
+                // refresh authorization cookies
+                request = new RequestEntity<>(documentEntry, loginService.getAuthorizationHeader(), HttpMethod.POST, url);
+                response = restTemplate.exchange(request, String.class);
+            }
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(response.getBody());
+
+            System.out.println(jsonNode);
+
+
+            inventoryExitAndEntryRepository.save(new InventoryExitAndEntry(jsonNode.get("DocNum").asText(),jsonNode.get("DocEntry").asText(),oibts,TypeOperation.ENTRY));
+
+            return oibts;
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (requestAttemps <= MAX_ATTEMPS) {
+                System.out.println((String.format("Retring once again after %d attemps", requestAttemps)));
+
+            }
+        } finally {
+            // clean requestAttemps class variable
+            requestAttemps = 0;
+        }
+        throw new RestClientException("It was not posible connect to " + "https://192.168.100.193:50000/b1s/v1/InventoryGenExits");
+
     }
 
     public List<DocumentLineEntry> DocumentLinesEntryByOIBT(List<OIBT> oibts,String comment){
@@ -218,6 +276,44 @@ public class InventoryEntryServiceImpl implements InventoryEntryService {
             documentLineEntry.setAccountCode("14350501");
             documentLineEntry.setCostingCode("4010");
             documentLineEntry.setUEstConcEntinv("20");
+            documentLineEntry.setCostingCode2("NoAplica");
+            documentLineEntry.setCostingCode3("N/A");
+            documentLineEntry.setUnitPrice(String.valueOf(1/Double.valueOf(sumResult)));
+            documentLineEntry.setComments(comment);
+
+            List<BatchNumber> batchNumbers = new ArrayList<>();
+            for(OIBT oibt: oibts1){
+                batchNumbers.add(new BatchNumber(oibt.getBatchNum(),oibt.getQuantity()));
+            };
+            documentLineEntry.setBatchNumbers(batchNumbers);
+            stockTransferLines.add(documentLineEntry);
+        });
+
+        return  stockTransferLines;
+    }
+
+    public List<DocumentLineEntry> DocumentLinesEntryByOIBTToldos(List<OIBT> oibts,String comment){
+
+        List<DocumentLineEntry> stockTransferLines = new ArrayList<>();
+
+        var mapItemCode = oibts.stream().collect(groupingBy(OIBT::getItemCode));
+
+
+        mapItemCode.forEach((s, oibts1) -> {
+
+            var a =oibts1.stream().map(OIBT::getQuantity).map(Double::valueOf);
+
+            var sum =a.mapToDouble(Double::doubleValue).sum();
+
+            var sumResult = String.format("%.3f%n", sum);
+
+            DocumentLineEntry documentLineEntry = new DocumentLineEntry();
+            documentLineEntry.setWarehouseCode("10019");
+            documentLineEntry.setQuantity(Double.valueOf(sumResult));
+            documentLineEntry.setItemCode(s);
+            documentLineEntry.setAccountCode("14350501");
+            documentLineEntry.setCostingCode("6010");
+            documentLineEntry.setUEstConcEntinv("21");
             documentLineEntry.setCostingCode2("NoAplica");
             documentLineEntry.setCostingCode3("N/A");
             documentLineEntry.setUnitPrice(String.valueOf(1/Double.valueOf(sumResult)));

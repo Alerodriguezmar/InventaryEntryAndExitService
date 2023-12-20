@@ -10,4 +10,6 @@ public interface InventoryEntryAndExitService {
 
 
     List<OIBT> InventoryExitAndEntry(HttpHeaders cookies) throws JsonProcessingException;
+
+    List<OIBT> InventoryExitAndEntryToldos(HttpHeaders cookies) throws JsonProcessingException;
 }

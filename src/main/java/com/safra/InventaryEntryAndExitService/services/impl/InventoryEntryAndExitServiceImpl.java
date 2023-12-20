@@ -30,6 +30,8 @@ public class InventoryEntryAndExitServiceImpl implements InventoryEntryAndExitSe
 
         //Consulta los primeros 2 Rollos inferiores a 1.2 mt en la bodega 10013-2
         List<OIBT> oibts = oibtService.findAllByWhsCode("10013-2");
+                //.subList(0,20);
+                //.subList(0,2);
 
         System.out.println(oibts);
 
@@ -38,6 +40,22 @@ public class InventoryEntryAndExitServiceImpl implements InventoryEntryAndExitSe
 
         //realiza el ingreso de los rollos consultados
         inventoryEntryService.EntryRollsStockMinBy(cookies,oibts,docNum);
+
+        return oibts;
+    }
+
+    @Override
+    public List<OIBT> InventoryExitAndEntryToldos(HttpHeaders cookies) throws JsonProcessingException {
+
+        List<OIBT> oibts = oibtService.findAllByBatchNumAndQuantity("10013-13",3.0);
+
+        System.out.println(oibts);
+
+        //Realiza la salida de los rollos consultado
+        var docNum = inventoryExitService.ExitRollsStockMinByToldos(cookies,oibts);
+
+        //realiza el ingreso de los rollos consultados
+        inventoryEntryService.EntryRollsStockMinByToldos(cookies,oibts,docNum);
 
         return oibts;
     }

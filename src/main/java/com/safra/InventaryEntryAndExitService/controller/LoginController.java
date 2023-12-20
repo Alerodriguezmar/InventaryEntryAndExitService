@@ -21,6 +21,7 @@ public class LoginController {
 
     @PostMapping("login")
     public String login(HttpServletRequest request) {
+        System.out.println("Login");
         HttpSession session = request.getSession(true);
        new CertificateSSLConfig().trustSelfSignedSSL();
         HttpHeaders login = loginService.login();

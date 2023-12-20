@@ -40,4 +40,9 @@ public class OIBTController {
         return ResponseEntity.status(HttpStatus.OK).body(oibtService.findAllByWhsCode(whsCode).size());
     }
 
+    @GetMapping("/quantity")
+    public ResponseEntity<List<OIBT>> findAllByBatchNumAndQuantity(@RequestParam(name = "whsCode" , defaultValue = "10013-2") String whsCode,@RequestParam(name = "whsCode" , defaultValue = "1.2") double quantity){
+        return ResponseEntity.status(HttpStatus.OK).body(oibtService.findAllByBatchNumAndQuantity(whsCode,quantity));
+    }
+
 }

@@ -36,4 +36,21 @@ public class InventoryEntryAndExitController {
         }
         return null;
     }
+
+    @PostMapping("partialProcessToldos")
+    public List<OIBT> partialTransferToldos(HttpServletRequest request) {
+        //Adjunta cookies de session
+        HttpSession session = request.getSession();
+
+        //Configura el certificado SSL(autofirmado)
+        new CertificateSSLConfig().trustSelfSignedSSL();
+        try {
+            //consume service
+            return inventoryEntryAndExitService.InventoryExitAndEntryToldos((HttpHeaders) session.getAttribute("cookies"));
+        } catch (Exception e) {
+            //capture error
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

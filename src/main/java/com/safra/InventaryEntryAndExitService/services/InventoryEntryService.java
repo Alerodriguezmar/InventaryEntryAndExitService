@@ -17,4 +17,7 @@ public interface InventoryEntryService {
 
 
     List<OIBT> EntryRollsStockMinBy(HttpHeaders cookies, List<OIBT> oibts,String comment) throws JsonProcessingException;
+
+    List<OIBT> EntryRollsStockMinByToldos(HttpHeaders cookies, List<OIBT> oibts,String comment) throws JsonProcessingException;
+
 }

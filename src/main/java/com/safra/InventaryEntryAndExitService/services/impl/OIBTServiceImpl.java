@@ -18,4 +18,10 @@ public class OIBTServiceImpl implements OIBTService {
     public List<OIBT> findAllByWhsCode(String whsCode) {
         return oibtRepository.findAllByBatchNum(whsCode);
     }
+
+
+    @Override
+    public List<OIBT> findAllByBatchNumAndQuantity(String whsCode , double quantity) {
+        return oibtRepository.findAllByBatchNumAndQuantity(whsCode,quantity);
+    }
 }

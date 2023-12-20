@@ -175,7 +175,14 @@ public class InventoryExitServiceImpl implements InventoryExitService {
                     HttpMethod.POST, url);
 
             try {
+
+                System.out.println(request.getBody());
+
                 response = restTemplate.exchange(request, String.class);
+
+                System.out.println(  request.getBody().toString());
+
+
             } catch (RestClientException e) {
                 e.printStackTrace();
             }
@@ -205,6 +212,66 @@ public class InventoryExitServiceImpl implements InventoryExitService {
             requestAttemps = 0;
         }
         throw new RestClientException("It was not posible connect to " + "https://192.168.100.193:50000/b1s/v1/InventoryGenExits");
+
+    }
+
+    @Override
+    public String ExitRollsStockMinByToldos(HttpHeaders cookies, List<OIBT> oibts) throws JsonProcessingException {
+        //Documento donde se adjuntan todas las salidas
+        DocumentExit documentExit = new DocumentExit();
+
+        //Creacion de la cabecera de el documento y los batchNums
+        documentExit.setDocumentLines(this.DocumentLinesExitByOIBTToldos(oibts));
+
+        try {
+
+            //Inicia
+            URI url = null;
+
+            ResponseEntity<String> response = null;
+            try {
+                url = new URI("https://192.168.100.193:50000/b1s/v1/InventoryGenExits");
+
+            } catch (URISyntaxException ex) {
+                ex.printStackTrace();
+            }
+            RequestEntity<DocumentExit> request = new RequestEntity<>(documentExit, loginService.getAuthorizationHeader(),
+                    HttpMethod.POST, url);
+
+            try {
+                response = restTemplate.exchange(request, String.class);
+            } catch (RestClientException e) {
+                e.printStackTrace();
+            }
+            // retry when unauthorized
+            if (response != null && response.getStatusCode().equals(HttpStatus.UNAUTHORIZED)) {
+                // refresh authorization cookies
+                request = new RequestEntity<>(documentExit, loginService.getAuthorizationHeader(), HttpMethod.POST, url);
+
+                response = restTemplate.exchange(request, String.class);
+            }
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(response.getBody());
+
+            System.out.println(jsonNode);
+
+
+            inventoryExitAndEntryRepository.save(new InventoryExitAndEntry(jsonNode.get("DocNum").asText(),jsonNode.get("DocEntry").asText(),oibts,TypeOperation.EXIT));
+
+            return jsonNode.get("DocNum").asText();
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (requestAttemps <= MAX_ATTEMPS) {
+                System.out.println((String.format("Retring once again after %d attemps", requestAttemps)));
+
+            }
+        } finally {
+            // clean requestAttemps class variable
+            requestAttemps = 0;
+        }
+        throw new RestClientException("It was not posible connect to " + "https://192.168.100.193:50000/b1s/v1/InventoryGenExits");
+
     }
 
     public List<DocumentLineExit> DocumentLinesExitByOIBT(List<OIBT> oibts){
@@ -229,6 +296,43 @@ public class InventoryExitServiceImpl implements InventoryExitService {
             documentLineExit.setAccountCode("61230503");
             documentLineExit.setCostingCode("4010");
             documentLineExit.setUEstConcSalinv("49");//47 pruebas
+            documentLineExit.setCostingCode2("NoAplica");
+            documentLineExit.setCostingCode3("N/A");
+
+            List<BatchNumber> batchNumbers = new ArrayList<>();
+            for(OIBT oibt: oibts1){
+                batchNumbers.add(new BatchNumber(oibt.getBatchNum(),oibt.getQuantity()));
+            };
+            documentLineExit.setBatchNumbers(batchNumbers);
+            stockTransferLines.add(documentLineExit);
+        });
+
+        return  stockTransferLines;
+    }
+
+
+    public List<DocumentLineExit> DocumentLinesExitByOIBTToldos(List<OIBT> oibts){
+
+        List<DocumentLineExit> stockTransferLines = new ArrayList<>();
+
+        var mapItemCode = oibts.stream().collect(groupingBy(OIBT::getItemCode));
+
+
+        mapItemCode.forEach((s, oibts1) -> {
+
+            var a =oibts1.stream().map(OIBT::getQuantity).map(Double::valueOf);
+
+            var sum =a.mapToDouble(Double::doubleValue).sum();
+
+            var sumResult = String.format("%.3f%n", sum);
+
+            DocumentLineExit documentLineExit = new DocumentLineExit();
+            documentLineExit.setWarehouseCode("10013-13");
+            documentLineExit.setQuantity(Double.valueOf(sumResult));
+            documentLineExit.setItemCode(s);
+            documentLineExit.setAccountCode("61230503");
+            documentLineExit.setCostingCode("6010");
+            documentLineExit.setUEstConcSalinv("51");//47 pruebas
             documentLineExit.setCostingCode2("NoAplica");
             documentLineExit.setCostingCode3("N/A");
 
